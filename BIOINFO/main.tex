@@ -1,9 +1,13 @@
-
 \documentclass[11pt,a4paper]{article}
 
+% ------------------------------------------------------------
+% Packages
+% ------------------------------------------------------------
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage{microtype}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{setspace}
 \usepackage{parskip}
@@ -19,7 +23,12 @@
 \usepackage{enumitem}
 \usepackage{fancyhdr}
 \usepackage{longtable}
+\usepackage{url}
+\setlength{\parindent}{0pt}
 
+% ------------------------------------------------------------
+% Hyperlinks and layout
+% ------------------------------------------------------------
 \hypersetup{
     colorlinks=true,
     linkcolor=blue!50!black,
@@ -27,12 +36,13 @@
     citecolor=blue!50!black
 }
 
-\setstretch{1.15}
+\setstretch{1.03}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0.7em}
+\setlength{\parskip}{0.2em}
 
 \definecolor{titleblue}{RGB}{27, 58, 99}
 \definecolor{softgray}{RGB}{245, 245, 245}
+\definecolor{softred}{RGB}{180, 50, 50}
 
 \titleformat{\section}
   {\large\bfseries\color{titleblue}}
@@ -48,22 +58,39 @@
 \fancyhead[R]{Hierarchical marker genes selection in scRNA-seq analysis}
 \fancyfoot[C]{\thepage}
 
-\newcommand{\figureplaceholder}[2]{
+% ------------------------------------------------------------
+% Useful commands
+% ------------------------------------------------------------
+\newcommand{\todochange}[1]{\textcolor{softred}{[CHANGE: #1]}}
+
+\newcommand{\missingfigurebox}[1]{%
+\fbox{%
+\begin{minipage}[c][4cm][c]{0.9\linewidth}
+\centering
+\textit{Figure file not found:} \texttt{#1}\\
+Replace this box with the correct image file or keep it as a placeholder.
+\end{minipage}}
+}
+
+\newcommand{\maybeincludefigure}[3]{%
 \begin{figure}[H]
     \centering
-    \fbox{\rule{0pt}{#1}\rule{0.9\linewidth}{0pt}}
-    \caption{#2}
+    \IfFileExists{#1}{\includegraphics[width=#2]{#1}}{\missingfigurebox{#1}}
+    \caption{#3}
 \end{figure}
 }
 
+% ------------------------------------------------------------
+% Document
+% ------------------------------------------------------------
 \begin{document}
 
 \begin{titlepage}
     \centering
     \vspace*{2cm}
-    {\Huge\bfseries\color{titleblue} Article Summary \par}
+    {\Huge\bfseries\color{titleblue} Hierarchical marker genes selection in scRNA-seq analysis\par}
     \vspace{0.4cm}
-    {\LARGE Hierarchical marker genes selection in scRNA-seq analysis\par}
+    {\LARGE Article Summary and Robustness Analysis\par}
     \vspace{1cm}
     {\large Bioinformatics / scRNA-seq review\par}
     \vspace{1.5cm}
@@ -73,8 +100,8 @@
     \setlength{\fboxsep}{12pt}
     \colorbox{softgray}{
         \parbox{0.85\textwidth}{
-        \textbf{Article reference:} Sun, Y. \& Qiu, P. (2024). \textit{Hierarchical marker genes selection in scRNA-seq analysis}. \\
-        \textbf{Main idea:} the authors propose a hierarchical marker gene selection strategy to overcome the limitations of the one-vs-all approach he one-vs-all approach, which is more classical, especially when cell types are closely related.
+        \textbf{Article reference:} Sun, Y. \& Qiu, P. (2024). \textit{Hierarchical marker genes selection in scRNA-seq analysis}. PLOS Computational Biology.\\[0.2cm]
+        \textbf{Main idea:} the authors propose a hierarchical marker gene selection strategy to overcome limitations of the classical one-vs-all approach, especially when cell types are closely related and share marker genes.
         }
     }
     \end{minipage}
@@ -82,49 +109,231 @@
     \vfill
     {\large Jef and Coline Clerbaux \par}
     \vspace{0.4cm}
-    {\large April 2026 \par}
+    {\large May 2026 \par}
     \vfill
 \end{titlepage}
 
-\section{General context}
+\tableofcontents
+\newpage
 
-Single-cell RNA sequencing (scRNA-seq) is a technology that measures gene expression at the level of individual cells. Unlike older bulk RNA-seq methods, which average gene expression across large and heterogeneous populations of cells, scRNA-seq provides a much more precise view of cellular heterogeneity. This makes it especially useful for identifying new cell types, studying developmental trajectories, and investigating diseases such as cancer or immune disorders.
+% ------------------------------------------------------------
+\section{Introduction}
 
-However, scRNA-seq generates very large and complex datasets. One central challenge is therefore to identify \textbf{marker genes}, namely genes whose expression helps distinguish one cell type from another. These marker genes are essential for annotating clusters obtained after unsupervised analysis and for giving them biological meaning.
+Single-cell RNA sequencing (scRNA-seq) measures gene expression at the level of individual cells. Unlike bulk RNA sequencing, which averages expression over a population of cells, scRNA-seq makes it possible to study cellular heterogeneity and to distinguish cell types or cell states inside complex tissues.
 
-\section{The problem addressed in the article}
+However, scRNA-seq generates very large and complex datasets. One central challenge is therefore to identify marker genes, namely genes whose expression helps distinguish one cell type from another. These marker genes are essential for annotating clusters obtained after unsupervised analysis and for giving them biological meaning.
 
-A common strategy for identifying marker genes is the \textbf{one-vs-all} approach. In this framework, one cluster is compared against all the other clusters combined, and genes that are significantly more expressed in that cluster are selected as markers.
+One of the most common strategy for identifying marker genes is the "one-vs-all" approach. In this framework, one cluster is compared against all the other clusters combined, and genes that are significantly more expressed in that cluster are selected as markers.
 
-Although this strategy is widely used, it has a large limitation. When several clusters are \textbf{closely related cell types}, the selected marker genes will often overlap. In other words, they capture what these related clusters have in common rather than what truly distinguishes them. As a result, the one-vs-all strategy may fail to separate similar cell types accurately and may reduce the interpretability of the analysis.
+This strategy is used a lot but it has a large limitation : when several clusters are closely related cell types, the selected marker genes will often overlap. They capture what these related clusters have in common rather than what truly distinguishes them. The one-vs-all strategy may, therefore, fail to separate similar cell types accurately and may reduce the interpretability of the analysis.
 
-To address this issue, the authors propose a \textbf{hierarchical marker gene selection method}. Instead of selecting markers for each cluster independently, they organize clusters into a hierarchy and identify marker genes at each split of this hierarchy. This allows them to define markers not only for individual cell types, but also for broader lineages and intermediate groups of related cell types.
+To address this issue, the authors propose a hierarchical marker gene selection method.
 
-\section{Introduction and main intuition}
+As shown in Figure ~\ref{fig:figure1}, in the heatmap of the classical seurat one-vs-all, there is often strong off-diagonal signal. Which is not good, because, diagonal blocks represent marker genes strongly expressed in their intended cluster. Thus, off-diagonal blocks indicate that these marker genes are also strongly expressed in other clusters, which suggests poor specificity.
 
-The authors show that the classical Seurat one-vs-all heatmap often contains strong \textbf{off-diagonal signal}. In a marker heatmap, diagonal blocks represent marker genes strongly expressed in their intended cluster, which is desirable. By contrast, off-diagonal blocks indicate that these marker genes are also strongly expressed in other clusters, which suggests poor specificity.
+The hierarchical approach is thus a proposition of amelioration to reduce the off-diagonal signal.
+It starts from all cell types grouped together, and then splits them progressively into smaller branch that are more specific. At each split, marker genes are recalculated for the groups being separated at that level of the hierarchy. The final result is therefore, a new heatmap (Figure~\ref{fig:figure1}) where the expression of the marker gene is more specific to the appropriate cluster. 
 
-The proposed hierarchical approach seeks to reduce this undesirable off-diagonal signal. The hierarchy starts from all cell types grouped together and progressively splits them into more specific branches. At each split, marker genes are redefined for the corresponding groups. The final result is an \textbf{assembled heatmap} in which marker gene expression is more structured and more specific to the appropriate clusters.
-
-\begin{figure}[H]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=\textwidth]{C1.png}
+    \caption{}
     \label{fig:figure1}
 \end{figure}
 
-\section{Project perspective}
-In this project, we aim to further investigate the hierarchical marker gene selection method by comparing it with alternative approaches, and exploring how it behaves under different datasets and parameters.
 
-\section{Methods}
+\section{The method}
 
-\section{Results}
+\subsection{Input of the method}
+
+The method of the article use a preprocessed and clustered scRNA-seq dataset (a gene expression matrix, predefined cell clusters or annotated cell types and a marker gene heatmaps generated from one-vs-all marker selection). 
+
+The goal of the method is not to discover cluster but to organize existing cluster into a hierarchy and select better marker genes for each level of that hierarchy. 
+
+\subsection{Scoring function} 
+
+To construct each split of the hierarchy, the authors use a score as a decision criterion to determine which groups should be merged or separated. The score is defined :
+
+\[
+ s = \frac{V_{\mathrm{diagonal}} - k \cdot V_{\mathrm{off-diagonal}}}{N_{\mathrm{celltypes}}}
+\]
+
+where:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item $V_{\mathrm{diagonal}}$ measures the average expression in the diagonal blocks;
+    \item $V_{\mathrm{off-diagonal}}$ measures the strongest undesirable off-diagonal expression;
+    \item $N_{\mathrm{celltypes}}$ is the number of cell types or groups considered at that step;
+    \item $k$ is a weight controlling how strongly off-diagonal expression is penalized.
+\end{itemize}
+
+The parameter k is set at 5. This parameter was questioned by reviewers of the article because it could seem to be chosen arbitrarily. In their response, the authors explained that they tested other values of k on the PBMC control dataset. They compared k=1, k=5 and k=7, and they observed that these three values produced the same hierarchy as the one shown in the Figure ~\ref{fig:figure1}. Based on this result, they argued that the method is robust around the default value k=5. They also tested an extreme case with a very small value, k=0.01. In this case, some cell types were grouped with unrelated lineages, which mean that the parameter choice can strongly affect the biological interpretation of the hierarchy.
+
+However, the choose of k=5 remains mostly empirical. They have shown that it works well on the PBMC control dataset, but they do not provide a general rule explaining how k should be selected for a new dataset. 
+
+
+\subsection{Hierarchy construction and assembled heatmap}
+
+The hierarchy is constructed by repeatedly testing possible merges between clusters. For each merge, the method recalculates marker genes and evaluates the resulting heatmap with the scoring function. The merge is kept only if it reduces the undesirable off-diagonal signal. When no merge improves the score, the current groups define a split, and the same process is repeated inside each branch.
+
+After the hierarchy is constructed, the marker gene heatmaps from all splits are concatenated into one assembled heatmap as you can see in the c part of Figure~\ref{fig:figure1}. Each horizontal block corresponds to one split of the hierarchy. This visualization summarizes which marker genes are selected at each level and whether they are specifically expressed in the expected cell groups.
+
+\section{Datasets and comparisons in the article}
+
+Sun and Qiu mainly evaluate the method on PBMC datasets. This is a reasonable choice because PBMC data contain immune cell populations with meaningful relationships : T-cell subtypes, monocyte subtypes, B cells, NK cells, dendritic cells and platelets. PBMC3k is used as the main illustrative example. PBMC control and PBMC stimulated datasets are used for larger classification and cross dataset mapping experiments.
+
+The article compares hierarchical marker genes against several alternatives, including all genes, highly variable genes, Seurat one-vs-all marker genes and scGeneFit based approaches. The evaluation relies heavily on KNN classification: selected marker genes are used as features, and the classifier tests whether cells can be assigned to the correct cell type.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\textwidth]{C2.png}
+    \caption{}
+    \label{fig:fig2}
+\end{figure}
+
+For PBMC3k, the authors report that hierarchical marker genes improve classification accuracy by 10.5\% compared with Seurat one-vs-all marker genes, while using the same number of genes. For PBMC control, they report an average accuracy of 88\% with hierarchical marker genes, compared with 74\% for Seurat one-vs-all marker genes.
+
+However, the Figure~\ref{fig:fig2} suggests that the improvement is not systematic for every individual cell type. In a few cases, Seurat flat is slightly above the hierarchical method, for example for Naive CD4 T in PBMC3k and for NK or CD14 Mono in PBMC control. This does not contradict the authors main result, but it shows that the advantage of the hierarchical method is mainly visible at the average level and for cell types that are difficult to separate.
+
+This can be explained by the design of the method. The hierarchical approach is most useful when cell types are closely related, because it selects marker genes at different levels of the hierarchy. When a cell type is already relatively distinct, a classical one-vs-all comparison may already select efficient markers. This may explain why Seurat flat can perform very well for some individual cell types.
+
+The authors themselves discuss a stronger limitation with the pancreas dataset. This dataset contains four clearly distinct cell types: alpha, beta, gamma, and delta cells. In this case, merging clusters does not reduce the off-diagonal signal, so the algorithm stops at the first iteration and becomes equivalent to the flat one-vs-all approach.
+
+Overall, the hierarchical method is not universally superior. It is most useful when the data contain meaningful hierarchical structure, such as related immune cell lineages. When cell types are already clearly separated, the method may add little information compared with a simpler one-vs-all strategy.
+
+
+\section{Project question and experimental design}
+
+We know that the methods works and improve the marker genes selection problem but we want to look whether its results are stable when marker selection parameters are modified.
+
+In transcriptomics, marker genes are used to interpret biological differences between cell types.
+Thus, if a small parameter change gives a similar hierarchy but different marker genes, the method may look stable visually while its biological interpretation remains sensitive to the choice of parameter.
+
+%maybe add somthenig related to change of dataset ? 
+
+\subsection{Parameters tested}
+
+In our experiments we keep the hierarchical method fixed and we modify marker selection parameters. We choose to modify two parameters:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item n: the number of top marker genes retained for each group or split;
+    \item pct: the minimum fraction of cells in which a gene must be expressed to be considered as a candidate marker.
+\end{itemize}
+
+These parameters directly affect the selected gene lists. Increasing n keeps more genes, which may help classification but can reduce interpretability. Changing pct changes which genes are eligible as markers: a low value is more permissive, while a high value is more restrictive.
+
+The original PBMC3k setting is $n=10$ and \texttt{pct}=0.25. Four additional settings were tested: $n=5$, \texttt{pct}=0.25; $n=10$, \texttt{pct}=0.10; $n=10$, \texttt{pct}=0.50; and $n=25$, \texttt{pct}=0.25.
+
+For each setting, we compared the \texttt{hierarchy\_list} files to see whether the same hierarchy was recovered, and we compared the \texttt{hierarchy\_gene\_list} files with the original setting. 
+
+For doing that we use Jaccard similarity:
+
+\[
+J(A,B) = \frac{|A \cap B|}{|A \cup B|}.
+\]
+
+This score measures how much two marker gene sets overlap. A high Jaccard similarity means that the two settings selected similar marker genes. A value that is low  means that the selected genes changed more strongly. 
+
+Then, we used the selected marker genes as features in a KNN classifier. This allows us to test whether different marker gene lists still contain enough information to classify cell types correctly.
+
+\subsection{Results}
+
+\subsubsection{Hierarchy stability}
+
+Across the tested parameter settings, the hierarchy structure remained stable in our comparison of the hierarchy output files. The same eight PBMC3k splits were recovered: Platelet versus the rest, monocytes versus the remaining groups, B/DC versus T/NK, NK versus T cells, CD8 T versus CD4 T, FCGR3A+ Mono versus CD14+ Mono, DC versus B, and Memory CD4 T versus Naive CD4 T.
+
+This result supports one part of the original article: the broad PBMC3k hierarchy is not fragile under the marker selection parameter changes tested here. However, this should not be overinterpreted. Our test only covers a limited parameter range and one dataset. It does not prove that the hierarchy would remain stable under different preprocessing choices, different clustering resolutions, different datasets or different values of the score parameter k.
+
+\subsubsection{Marker gene instability and biological interpretation}
+
+The stability of the hierarchy does not extend to the marker gene lists. Table~\ref{tab:gene_counts} shows that the number of selected unique marker genes changes strongly across parameter settings, from 66 genes for $n=5$, \texttt{pct}=0.25 to 312 genes for $n=25$, \texttt{pct}=0.25.
+
+\begin{table}[H]
+\centering
+\caption{Number of unique marker genes and classification results by parameter setting.}
+\label{tab:gene_counts}
+\begin{tabular}{lrrrr}
+\toprule
+Parameter setting & Unique genes & Mean KNN & SD KNN & Mean macro-F1 \\
+\midrule
+$n=5$, \texttt{pct}=0.25 & 66 & 0.826 & 0.0086 & 0.859 \\
+$n=10$, \texttt{pct}=0.10 & 135 & 0.824 & 0.0107 & 0.868 \\
+$n=10$, \texttt{pct}=0.25 & 127 & 0.863 & 0.0107 & 0.891 \\
+$n=10$, \texttt{pct}=0.50 & 127 & 0.864 & 0.0115 & 0.893 \\
+$n=25$, \texttt{pct}=0.25 & 312 & 0.868 & 0.0110 & 0.889 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Jaccard matrix in Figure~\ref{fig:Figure4} shows that several parameter settings share only a limited fraction of genes. Compared with the reference setting $n=10$, \texttt{pct}=0.25, the Jaccard similarity is 0.52 for $n=5$, \texttt{pct}=0.25, 0.34 for $n=10$, \texttt{pct}=0.10, 0.32 for $n=10$, \texttt{pct}=0.50, and 0.41 for $n=25$, \texttt{pct}=0.25.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{C4.png}
+\caption{Jaccard similarity between global marker gene lists.}
+\label{fig:Figure4}
+\end{figure}
+
+The same hierarchy can be explained by different marker gene lists. Marker genes are not only computational features; they are also used as biological evidence. If the selected genes change substantially when parameters change, then the biological interpretation of a branch or cell type is less stable than the tree visualization suggests.
+
+\subsubsection{KNN classification}
+
+The KNN results show that marker gene instability does not necessarily lead to a large decrease in classification performance. Several different gene lists classify cells with comparable accuracy. As shown in Figure~\ref{fig:Figure3}, some parameter settings remain close in KNN accuracy even when their Jaccard similarity to the reference marker gene list differs substantially.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{C3.png}
+    \caption{Relationship between marker gene stability and KNN classification performance}
+    \label{fig:Figure3}
+\end{figure}
+
+For example, the settings n = 10, pct = 0.25, n = 10, pct = 0.50, and n = 25, pct = 0.25 reach similar mean accuracies of approximately 0.862, 0.864, and 0.868, respectively. However, these settings do not correspond to identical marker gene lists. This means that different gene sets can lead to comparable predictive performance.
+
+The highest mean accuracy is obtained with n = 25, pct = 0.25. This result is partly expected because this setting uses a larger marker gene list. A larger list can contain more informative genes and therefore improve classification. However, this does not automatically make it the best biological choice. It may improve predictive performance, but it also makes the result less compact and harder to interpret.
+
+In contrast, n = 5, pct = 0.25 produces a smaller gene list and gives a lower mean accuracy, around 0.826. This is also expected to some extent, because retaining fewer genes limits the information available to the classifier. The setting n = 10, pct = 0.10 also performs less well, with a mean accuracy close to 0.823. This suggests that a threshold that is too permissive may include less specific genes, which can reduce the quality of the marker set.
 
 \section{Discussion}
 
-\section{Conclusion}
+Our analysis does not show that the Sun and Qiu method fails. The broad hierarchy is stable in PBMC3k and several marker gene sets classify cell types well. The more precise conclusion is that the method can be stable at one level and less stable at another one. A method can be robust at the hierarchy level, acceptable at the classification level and still unstable at the markergene level.
+
+This distinction is important for biological interpretation. If the goal is only to classify cells, several gene lists may be sufficient. But if the goal is to claim that specific genes characterize a lineage or cell type, then gene list stability becomes essential. The original article emphasizes interpretability, but interpretability should include not only a clean heatmap but also the stability and compactness of the genes selected.
+
+The artcile of  Liu et al. argue that marker gene selection should balance classification performance with gene set size, because compact gene sets are easier to interpret and validate experimentally \cite{liu2026}. Our results point in the same direction. The largest gene set gives the highest mean KNN accuracy, but it may be less useful as a compact biological signature. Conversely, a smaller gene set is easier to interpret but can lose predictive power.
+
+The main weakness of the original article is therefore not that its results are false. The central idea is sound, and the PBMC results support it. The weakness is that the evaluation relies too heavily on heatmap clarity and classification accuracy. These criteria are useful, but they do not fully test whether the same biological explanation is recovered across reasonable parameter choices.
+
+Their are still some limitations in our analysis : Jaccard similarity treats all marker genes equally. It does not distinguish highly ranked markers from lower ranked markers, nor does it evaluate whether changing genes affects biological pathways. And, KNN accuracy is only one downstream metric. Other classifiers or cross dataset mapping experiments could give a more complete evaluation.
 
 
 
 
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\subsection{another dataset}
+
+
+% ------------------------------------------------------------
+\section{Conclusion }
+
+
+
+
+% ------------------------------------------------------------
+
+\addcontentsline{toc}{section}{References}
+
+\begin{thebibliography}{9}
+
+\bibitem{sun2024}
+Sun, Y. and Qiu, P. (2024). \textit{Hierarchical marker genes selection in scRNA-seq analysis}. PLOS Computational Biology, 20(12): e1012643. \url{https://doi.org/10.1371/journal.pcbi.1012643}
+
+\bibitem{liu2026}
+Liu, Y., Baugh, A. G., Roussos Torres, E. T., and MacLean, A. L. (2026). \textit{Inference of marker genes of subtle cell state changes via iLR: iterative logistic regression}. Bioinformatics, 42(2): btag051. \url{https://doi.org/10.1093/bioinformatics/btag051}
+
+
+\end{thebibliography}
 
 \end{document}
+
