@@ -279,7 +279,11 @@ Then, we used the selected marker genes as features in a KNN classifier.
 This allows us to test whether different marker gene lists still contain enough information to classify cell types correctly.
 
 \subsection{Additional datasets}
-%TODO jef
+We also looked at a different dataset to see if the hierarchical method could be used there.
+For this we used a dataset with 1781 cells and 14818 genes from a study about Activin A in mice by Yin et al.\cite{yin2026}.
+We will refer to this dataset as the Activin A dataset.
+We ran the hierarchical method on this dataset with the parameters set at $n=10$ and $pct=0.25$.
+We also tested the results using a KNN classifier.
 
 \subsection{Results}
 
@@ -359,6 +363,35 @@ This is also expected to some extent, because retaining fewer genes limits the i
 The setting $n = 10$, $pct = 0.10$ also performs worse, with a mean accuracy close to 0.823.
 This suggests that a threshold that is too permissive may include less specific genes, which can reduce the quality of the marker set.
 
+\subsection{Additional dataset results}
+For the Activin A dataset our method found 8 clusters, for which it found 2 pairs of highly correlated clusters as you can see in Figure ~\ref{fig:Figure5}.
+It is important to note that the original authors of the study used 6 cell types to label all the cells.
+The 2 pairs of cell clusters that our method found were in the same cluster in the original paper.
+Showing that the method can be useful to look at clustering on different levels of specificity.
+We could use the hierarchical information to merge clusters of cells that are similar enough.
+The KNN classifier we trained with the marker genes of our method gave us a accuracy of $96\%$.
+
+\begin{table}[H]
+\centering
+\caption{Number of unique marker genes and classification results for the Activin A dataset.}
+\label{tab:gene_counts}
+\begin{tabular}{lrrrr}
+\toprule
+Unique genes & Mean KNN & SD KNN & Mean macro-F1 \\
+\midrule
+100 & 0.9640 & 0.0055 & 0.9282 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{additional_dataset_plot_hierarchy.png}
+    \caption{\textbf{Overview of hierarchical marker gene selection in Activin A dataset.} \textbf{(a)} Assembled heatmap that concatenates marker gene heatmaps for individual splits in the constructed cell cluster hierarchy. \textbf{(b)} Our constructed hierarchical structure of cell clusters in the Activin A dataset.}
+    \label{fig:Figure5}
+\end{figure}
+
 \section{Discussion}
 
 Our analysis does not show that the Sun and Qiu method fails. The broad hierarchy is stable in PBMC3k, and several marker gene sets classify cell types well.
@@ -412,6 +445,8 @@ Sun, Y. and Qiu, P. (2024). \textit{Hierarchical marker genes selection in scRNA
 \bibitem{liu2026}
 Liu, Y., Baugh, A. G., Roussos Torres, E. T., and MacLean, A. L. (2026). \textit{Inference of marker genes of subtle cell state changes via iLR: iterative logistic regression}. Bioinformatics, 42(2): btag051. \url{https://doi.org/10.1093/bioinformatics/btag051}
 
+\bibitem{yin2026}
+Yin, W., et al. \textit{Activin a Secretion by Muscle-Repairing Macrophages Induces Heterotopic Ossification in Mice.} Journal of Clinical Investigation, vol. 136, no. 5, 2 Mar. 2026, \url{https://doi.org/10.1172/jci193797}.
 
 \end{thebibliography}
 
