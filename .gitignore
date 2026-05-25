@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+
+./ketogenic_dataset/*
