@@ -279,15 +279,16 @@ Then, we used the selected marker genes as features in a KNN classifier.
 This allows us to test whether different marker gene lists still contain enough information to classify cell types correctly.
 
 \subsection{Additional datasets}
+
 We also looked at a different dataset to see if the hierarchical method could be used there.
 For this we used a dataset with 1781 cells and 14818 genes from a study about Activin A in mice by Yin et al.\cite{yin2026}.
 We will refer to this dataset as the Activin A dataset.
 We ran the hierarchical method on this dataset with the parameters set at $n=10$ and $pct=0.25$.
 We also tested the results using a KNN classifier.
 
-\subsection{Results}
+\section{Results}
 
-\subsubsection{Hierarchy stability}
+\subsection{Hierarchy stability}
 
 Across the tested parameter settings, the hierarchy structure remained stable in our comparison of the hierarchy output files.
 The same eight PBMC3k splits were recovered: Platelet versus the rest, monocytes versus the remaining groups, B/DC versus T/NK, NK versus T cells, CD8 T versus CD4 T, FCGR3A+ Mono versus CD14+ Mono, DC versus B, and Memory CD4 T versus Naive CD4 T.
@@ -297,7 +298,7 @@ However, this should not be overinterpreted.
 Our test only covers a limited parameter range and one dataset.
 It does not prove that the hierarchy would remain stable under different preprocessing choices, different clustering resolutions, different datasets or different values of the score parameter k.
 
-\subsubsection{Marker gene instability and biological interpretation}
+\subsection{Marker gene instability and biological interpretation}
 
 The stability of the hierarchy does not extend to the marker gene lists.
 Table~\ref{tab:gene_counts} shows that the number of selected unique marker genes changes strongly across parameter settings, from 66 genes for $n=5$, $\texttt{pct}=0.25$ to 312 genes for $n=25$, $\texttt{pct}=0.25$.
@@ -335,7 +336,7 @@ Marker genes are not only computational features; they are also used as biologic
 If the selected genes change substantially when parameters change, then the biological interpretation of a branch or cell type is less stable than the tree visualisation suggests.
 % TODO coline, which visualisation do you mean here?
 
-\subsubsection{KNN classification}
+\subsection{KNN classification}
 
 The KNN results show that marker gene instability does not necessarily lead to a large decrease in classification performance.
 Several different gene lists classify cells with comparable accuracy.
@@ -363,7 +364,7 @@ This is also expected to some extent, because retaining fewer genes limits the i
 The setting $n = 10$, $pct = 0.10$ also performs worse, with a mean accuracy close to 0.823.
 This suggests that a threshold that is too permissive may include less specific genes, which can reduce the quality of the marker set.
 
-\subsection{Additional dataset results}
+\subsection{Additional dataset}
 For the Activin A dataset our method found 8 clusters, for which it found 2 pairs of highly correlated clusters as you can see in Figure ~\ref{fig:Figure5}.
 It is important to note that the original authors of the study used 6 cell types to label all the cells.
 The 2 pairs of cell clusters that our method found were in the same cluster in the original paper.
@@ -417,21 +418,6 @@ There are still some limitations in our analysis: Jaccard similarity treats all 
 It does not distinguish highly ranked markers from lower-ranked markers, nor does it evaluate whether changing genes affects biological pathways.
 Additionally, KNN accuracy is only one downstream metric.
 Other classifiers or cross-dataset mapping experiments could give a more complete evaluation.
-
-
-
-
-% ------------------------------------------------------------
-% ------------------------------------------------------------
-% ------------------------------------------------------------
-\subsection{another dataset}
-
-
-% ------------------------------------------------------------
-\section{Conclusion }
-
-
-
 
 % ------------------------------------------------------------
 
