@@ -133,13 +133,13 @@ As a result, the one-vs-all strategy may fail to separate similar cell types acc
 To address this issue, the authors propose a hierarchical marker gene selection method.
 
 As shown in Figure ~\ref{fig:figure1}, in the heatmap of the classical Seurat one-vs-all, there is often a strong off-diagonal signal.
-This is not good, because diagonal blocks represent marker genes strongly expressed in their intended cluster.
+This is problematic, because diagonal blocks represent marker genes strongly expressed in their intended cluster.
 Thus, off-diagonal blocks indicate that these marker genes are also strongly expressed in other clusters, which suggests poor specificity.
 
-The hierarchical approach is thus a proposition of amelioration to reduce the off-diagonal signal.
+The hierarchical approach is thus a proposed improvement to reduce the off-diagonal signal.
 It starts from all cell types grouped together, and then splits them progressively into smaller branches that are more specific.
 At each split, marker genes are recalculated for the groups being separated at that level of the hierarchy.
-The final result is a new heatmap (Figure~\ref{fig:figure1}), where the expression of the marker gene is more specific to the appropriate cluster. 
+The final result is a new heatmap (Figure~\ref{fig:figure1}),where marker genes are more specifically expressed in the expected clusters.. 
 
 \begin{figure}[!htbp]
     \centering
@@ -176,7 +176,7 @@ where:
 
 The parameter $k$ is set at $5$. Reviewers of the article questioned this parameter because it could seem to be chosen arbitrarily.
 In their response, the authors explained that they tested other values of k on the PBMC control dataset.
-They compared $k=1$, $k=5$ and $k=7$, and they observed that these three values produced the same hierarchy as the one shown in the Figure ~\ref{fig:figure1}.
+They compared $k=1$, $k=5$ and $k=7$ on the PBMC control dataset and observed that these values produced the same hierarchy.
 Based on this result, they argued that the method is robust around the default value k=5.
 They also tested an extreme case with a very small value, $k=0.01$.
 In this case, some cell types were grouped with unrelated lineages, which means that the parameter choice can strongly affect the biological interpretation of the hierarchy.
@@ -189,7 +189,7 @@ They have shown that it works well on the PBMC control dataset, but they do not 
 
 The hierarchy is constructed by repeatedly testing possible merges between clusters. 
 For each merge, the method recalculates marker genes and evaluates the resulting heatmap with the scoring function. 
-The merge is kept only if it reduces the undesirable off-diagonal signal. 
+The merge is kept only if it improves the heatmap score.
 When no merge improves the score, the current groups define a split, and the same process is repeated inside each branch.
 
 After the hierarchy is constructed, the marker gene heatmaps from all splits are concatenated into one assembled heatmap, as you can see in the c part of Figure~\ref{fig:figure1}. Each horizontal block corresponds to one split of the hierarchy. This visualisation summarises which marker genes are selected at each level and whether they are specifically expressed in the expected cell groups.
@@ -233,7 +233,7 @@ When cell types are already clearly separated, the method may add little informa
 
 \section{Project question and experimental design}
 
-We know that the methods works and improves the marker genes selection problem, but we want to look whether its results are stable when marker selection parameters are modified.
+The original article shows that the method improves marker gene selection in PBMC datasets. Our question is whether the results remain stable when marker selection parameters are modified.
 
 In transcriptomics, marker genes are used to interpret biological differences between cell types.
 Thus, if a small parameter change gives a similar hierarchy but different marker genes, the method may look stable visually while its biological interpretation remains sensitive to the choice of parameter.
@@ -311,14 +311,16 @@ Table~\ref{tab:gene_counts} shows that the number of selected unique marker gene
 \toprule
 Parameter setting & Unique genes & Mean KNN & SD KNN & Mean macro-F1 \\
 \midrule
-$n=5,\ \texttt{pct}=0.25$ & 66 & 0.826 & 0.0086 & 0.859 \\
-$n=10,\ \texttt{pct}=0.10$ & 135 & 0.824 & 0.0107 & 0.868 \\
-$n=10,\ \texttt{pct}=0.25$ & 127 & 0.863 & 0.0107 & 0.891 \\
-$n=10,\ \texttt{pct}=0.50$ & 127 & 0.864 & 0.0115 & 0.893 \\
-$n=25,\ \texttt{pct}=0.25$ & 312 & 0.868 & 0.0110 & 0.889 \\
+$n=5,\ \texttt{pct}=0.25$ & 66 & 0.826 & 0.009 & 0.859 \\
+$n=10,\ \texttt{pct}=0.10$ & 135 & 0.824 & 0.011 & 0.868 \\
+$n=10,\ \texttt{pct}=0.25$ & 127 & 0.863 & 0.011 & 0.891 \\
+$n=10,\ \texttt{pct}=0.50$ & 127 & 0.864 & 0.012 & 0.893 \\
+$n=25,\ \texttt{pct}=0.25$ & 312 & 0.868 & 0.011 & 0.889 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
 % TODO Coline, should the mean and SD not have same amount of digits?
 
 The Jaccard matrix in Figure~\ref{fig:Figure4} shows that several parameter settings share only a limited fraction of genes.
@@ -333,8 +335,14 @@ Compared with the reference setting $n=10$, $\texttt{pct}=0.25$, the Jaccard sim
 
 The same hierarchy can be explained by different marker gene lists.
 Marker genes are not only computational features; they are also used as biological evidence.
-If the selected genes change substantially when parameters change, then the biological interpretation of a branch or cell type is less stable than the tree visualisation suggests.
+If the selected genes change substantially when parameters change, then the biological interpretation of a branch or cell type is less stable than the hierarchy list suggests.
 % TODO coline, which visualisation do you mean here?
+
+This analysis separates structural stability from explanatory stability. The split hierarchy may tell the same high-level story, but the molecular evidence used to support that story changes. This is especially important because marker genes can later be used for annotation, experimental validation, cytometry panels or biological interpretation. If a branch is stable but the markers supporting it are parameter-sensitive, then the branch may reflect a robust separation in expression space while the precise biological signature remains uncertain.
+
+Marker genes act as compact biological signatures of cell identity. A good marker signature should not only allow good classification, but also remain stable and interpretable across reasonable parameter choices. Our Jaccard results suggest that the marker-gene signatures are more parameter-dependent than the hierarchy itself.
+
+
 
 \subsection{KNN classification}
 
@@ -395,29 +403,16 @@ Unique genes & Mean KNN & SD KNN & Mean macro-F1 \\
 
 \section{Discussion}
 
-Our analysis does not show that the Sun and Qiu method fails. The broad hierarchy is stable in PBMC3k, and several marker gene sets classify cell types well.
-The more precise conclusion is that the method can be stable at one level and less stable at another.
-A method can be robust at the hierarchy level, acceptable at the classification level and still unstable at the marker gene level.
+Our analysis does not show that the Sun and Qiu method fails. On PBMC3k, the broad hierarchy remains stable across the parameter settings tested, and several marker-gene sets achieve good KNN classification performance. The more precise conclusion is that robustness depends on the level of analysis. The method can be stable at the hierarchy level, perform well at the classification level, and still be less stable at the marker-gene level.
 
-This distinction is important for biological interpretation.
-If the goal is only to classify cells, several gene lists may be sufficient.
-However, if the goal is to claim that specific genes characterise a lineage or cell type, then gene list stability becomes essential.
-The original article emphasises interpretability, but interpretability should include not only a clean heatmap but also the stability and compactness of the genes selected.
+This distinction is important for biological interpretation. If the goal is only to classify cells, different marker-gene lists may be sufficient. However, if the goal is to claim that specific genes characterize a lineage or cell type, then marker-gene stability becomes essential. Interpretability should therefore not only refer to a clear hierarchy or a readable heatmap, but also to the stability, compactness and biological meaning of the selected genes.
 
-The article of  Liu et al. argues that marker gene selection should balance classification performance with gene set size, because compact gene sets are easier to interpret and validate experimentally \cite{liu2026}.
-Our results point in the same direction.
-The largest gene set gives the highest mean KNN accuracy, but it may be less useful as a compact biological signature.
-Conversely, a smaller gene set is easier to interpret but can lose predictive power.
+This result also connects with a criticism raised by Liu et al. regarding marker-gene selection: high classification performance is not sufficient if the selected gene set becomes too large or difficult to interpret \cite{liu2026}. Our results follow the same idea. The largest marker-gene set gives the highest mean KNN accuracy, but the improvement is limited and comes with many more genes. In contrast, smaller gene sets are easier to interpret biologically, but may lose some predictive power. This suggests that marker-gene selection should be evaluated not only by classification accuracy, but also by compactness and biological readability.
 
-The main weakness of the original article is therefore not that its results are false.
-The central idea is sound, and the PBMC results support it.
-The weakness is that the evaluation relies too heavily on heatmap clarity and classification accuracy.
-These criteria are useful, but they do not fully test whether the same biological explanation is recovered across reasonable parameter choices.
 
-There are still some limitations in our analysis: Jaccard similarity treats all marker genes equally.
-It does not distinguish highly ranked markers from lower-ranked markers, nor does it evaluate whether changing genes affects biological pathways.
-Additionally, KNN accuracy is only one downstream metric.
-Other classifiers or cross-dataset mapping experiments could give a more complete evaluation.
+The main limitation of the original article is therefore not that its results are false. The central idea is sound, and the PBMC results support it. The limitation is that heatmap readability and classification accuracy do not fully test whether the same biological explanation is recovered across reasonable parameter choices. Our analysis adds this missing layer by comparing the stability of the hierarchy separately from the stability of the marker-gene lists.
+
+There are also limitations in our analysis. Jaccard similarity measures gene overlap, but it does not show whether the strongest or most biologically informative markers are conserved. In addition, KNN accuracy is only one downstream classification metric, so further validation would be needed to evaluate biological robustness more completely.
 
 % ------------------------------------------------------------
 
