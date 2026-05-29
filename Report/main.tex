@@ -206,7 +206,7 @@ The evaluation relies heavily on KNN classification: selected marker genes are u
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=\textwidth]{C2.png}
+    \includegraphics[width=0.75\textwidth]{C2.png}
     \caption{}
     \label{fig:fig2}
 \end{figure}
@@ -257,11 +257,13 @@ Increasing $n$ keeps more genes, which may help classification but can reduce in
 Changing $pct$ changes which genes are eligible as markers: a low value is more permissive, while a high value is more restrictive.
 
 The original PBMC3k setting is $n=10$ and $\texttt{pct}=0.25$.
-Four additional settings were tested: 
-$$n=5,\ \texttt{pct}=0.25$$
-$$n=10,\ \texttt{pct}=0.10$$
-$$n=10,\ \texttt{pct}=0.50$$
-$$n=25,\ \texttt{pct}=0.25$$
+Four additional settings were tested:
+\begin{enumerate}
+    \item $n=5,\ \texttt{pct}=0.25$
+    \item $n=10,\ \texttt{pct}=0.10$
+    \item $n=10,\ \texttt{pct}=0.50$
+    \item $n=25,\ \texttt{pct}=0.25$
+\end{enumerate}
 
 For each setting, we compared the \texttt{hierarchy\_list} files to see whether the same hierarchy was recovered, and we compared the \texttt{hierarchy\_gene\_list} files with the original setting. 
 
@@ -328,7 +330,7 @@ Compared with the reference setting $n=10$, $\texttt{pct}=0.25$, the Jaccard sim
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\linewidth]{C4.png}
+\includegraphics[width=0.5\linewidth]{C4.png}
 \caption{Jaccard similarity between global marker gene lists.}
 \label{fig:Figure4}
 \end{figure}
@@ -352,7 +354,7 @@ As shown in Figure~\ref{fig:Figure3}, some parameter settings remain close in KN
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{C3.png}
+    \includegraphics[width=0.50\textwidth]{C3.png}
     \caption{Relationship between marker gene stability and KNN classification performance}
     \label{fig:Figure3}
 \end{figure}
@@ -396,7 +398,7 @@ Unique genes & Mean KNN & SD KNN & Mean macro-F1 \\
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=1\linewidth]{additional_dataset_plot_hierarchy.png}
+    \includegraphics[width=0.75\linewidth]{additional_dataset_plot_hierarchy.png}
     \caption{\textbf{Overview of hierarchical marker gene selection in Activin A dataset.} \textbf{(a)} Assembled heatmap that concatenates marker gene heatmaps for individual splits in the constructed cell cluster hierarchy. \textbf{(b)} Our constructed hierarchical structure of cell clusters in the Activin A dataset.}
     \label{fig:Figure5}
 \end{figure}
